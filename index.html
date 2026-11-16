@@ -1,0 +1,1588 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d5c46">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Dukaan Saathi — Billing, Stock aur Khata</title>
+<style>
+  :root{
+    --bg:#eef2f0; --card:#ffffff; --ink:#122420; --muted:#697d77; --line:#dfe7e4;
+    --pri:#0d5c46; --pri-soft:#e4f1ec; --accent:#e9a300; --danger:#c0392b; --ok:#12805c;
+    --r:16px; --shadow:0 1px 2px rgba(16,40,34,.06),0 6px 18px rgba(16,40,34,.06);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans",sans-serif;
+    background:var(--bg); color:var(--ink); font-size:15px; line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{max-width:560px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+  button{font-family:inherit;font-size:inherit;cursor:pointer;border:0;background:none;color:inherit}
+  input,select,textarea{font-family:inherit;font-size:16px;color:var(--ink)}
+  .hidden{display:none !important}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;
+    padding:14px 16px calc(14px + env(safe-area-inset-top)) 16px;padding-top:calc(14px + env(safe-area-inset-top));
+    background:linear-gradient(135deg,#0d5c46,#0f7a5c);color:#fff;
+  }
+  .topbar .logo{width:36px;height:36px;border-radius:11px;background:rgba(255,255,255,.16);display:grid;place-items:center;font-weight:800;font-size:16px;flex:0 0 auto}
+  .topbar .who{flex:1;min-width:0}
+  .topbar .shop{font-weight:700;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .topbar .sub{font-size:12px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .icon-btn{width:36px;height:36px;border-radius:11px;background:rgba(255,255,255,.14);display:grid;place-items:center;font-size:15px}
+
+  /* ---------- layout ---------- */
+  main{flex:1;padding:14px 14px calc(96px + env(safe-area-inset-bottom))}
+  .card{background:var(--card);border-radius:var(--r);padding:14px;box-shadow:var(--shadow);border:1px solid var(--line)}
+  .card + .card{margin-top:12px}
+  .row{display:flex;align-items:center;gap:10px}
+  .between{justify-content:space-between}
+  .wrap{flex-wrap:wrap}
+  .grow{flex:1;min-width:0}
+  .muted{color:var(--muted)}
+  .small{font-size:12.5px}
+  .tiny{font-size:11.5px}
+  .b{font-weight:700}
+  .center{text-align:center}
+  .mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}
+  h2.sec{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:18px 4px 8px;font-weight:700}
+  .divider{height:1px;background:var(--line);margin:12px 0}
+
+  /* ---------- buttons ---------- */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 18px;border-radius:12px;background:var(--pri);color:#fff;font-weight:650;font-size:15px;transition:transform .06s ease,opacity .15s}
+  .btn:active{transform:scale(.985)}
+  .btn.block{width:100%}
+  .btn.ghost{background:var(--pri-soft);color:var(--pri)}
+  .btn.line{background:#fff;border:1px solid var(--line);color:var(--ink)}
+  .btn.danger{background:#fdecea;color:var(--danger)}
+  .btn.sm{padding:9px 13px;font-size:13.5px;border-radius:10px}
+  .btn:disabled{opacity:.45}
+
+  /* ---------- stat tiles ---------- */
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:13px;box-shadow:var(--shadow)}
+  .stat .k{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+  .stat .v{font-size:20px;font-weight:800;margin-top:4px;letter-spacing:-.02em}
+  .stat .n{font-size:11.5px;color:var(--muted);margin-top:2px}
+
+  /* ---------- list items ---------- */
+  .item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+  .item:last-child{border-bottom:0}
+  .item .av{width:38px;height:38px;border-radius:11px;background:var(--pri-soft);color:var(--pri);display:grid;place-items:center;font-weight:800;flex:0 0 auto}
+  .item .t{font-weight:650}
+  .pill{font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--pri-soft);color:var(--pri)}
+  .pill.warn{background:#fff5dd;color:#8a5a00}
+  .pill.bad{background:#fdecea;color:var(--danger)}
+  .pill.ok{background:#e3f6ee;color:var(--ok)}
+
+  /* ---------- forms ---------- */
+  .field{margin-top:12px}
+  .field label{display:block;font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:6px}
+  .inp{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:#fff;outline:none}
+  .inp:focus{border-color:var(--pri);box-shadow:0 0 0 3px var(--pri-soft)}
+  select.inp{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23697d77' stroke-width='2.5'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 12px center}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+  /* ---------- segmented ---------- */
+  .seg{display:flex;background:#e7edea;border-radius:12px;padding:4px;gap:4px}
+  .seg button{flex:1;padding:10px 6px;border-radius:9px;font-weight:650;font-size:13.5px;color:var(--muted)}
+  .seg button.on{background:#fff;color:var(--pri);box-shadow:0 1px 3px rgba(16,40,34,.12)}
+
+  /* ---------- bottom nav ---------- */
+  nav.tabs{
+    position:fixed;bottom:0;left:0;right:0;z-index:20;max-width:560px;margin:0 auto;
+    display:grid;grid-template-columns:repeat(5,1fr);background:#fff;border-top:1px solid var(--line);
+    padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+  }
+  nav.tabs button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;color:var(--muted);font-size:10.5px;font-weight:650;border-radius:10px}
+  nav.tabs button .ic{font-size:19px;line-height:1}
+  nav.tabs button.on{color:var(--pri);background:var(--pri-soft)}
+
+  /* ---------- modal ---------- */
+  .modal-wrap{position:fixed;inset:0;z-index:50;background:rgba(9,25,21,.45);display:flex;align-items:flex-end;justify-content:center;padding:0}
+  .modal{background:#fff;width:100%;max-width:560px;border-radius:20px 20px 0 0;max-height:92vh;overflow:auto;padding:16px 16px calc(20px + env(safe-area-inset-bottom));animation:up .18s ease}
+  @keyframes up{from{transform:translateY(14px);opacity:.6}to{transform:none;opacity:1}}
+  .modal h3{margin:0 0 4px;font-size:17px}
+  .sheet-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px}
+  .x{width:32px;height:32px;border-radius:10px;background:#f1f5f3;display:grid;place-items:center;font-size:16px;color:var(--muted);flex:0 0 auto}
+
+  /* ---------- auth ---------- */
+  .auth{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:26px 20px calc(26px + env(safe-area-inset-bottom));max-width:460px;margin:0 auto}
+  .auth .brand{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+  .auth .mark{width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,#0d5c46,#159f78);color:#fff;display:grid;place-items:center;font-size:24px;font-weight:800;box-shadow:var(--shadow)}
+  .auth h1{font-size:22px;margin:0;letter-spacing:-.02em}
+  .users{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+  .user-tile{display:flex;align-items:center;gap:8px;padding:9px 13px;border-radius:12px;border:1.5px solid var(--line);background:#fff;font-weight:650;font-size:14px}
+  .user-tile.on{border-color:var(--pri);background:var(--pri-soft);color:var(--pri)}
+  .pinrow{display:flex;gap:8px;margin-top:12px}
+  .pinrow .inp{letter-spacing:.4em;text-align:center;font-weight:800;font-size:19px}
+
+  /* ---------- misc ---------- */
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom));z-index:80;background:#122420;color:#fff;padding:11px 18px;border-radius:12px;font-size:13.5px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:88vw;text-align:center}
+  .empty{text-align:center;padding:26px 10px;color:var(--muted)}
+  .empty .big{font-size:30px;margin-bottom:8px}
+  table.bill{width:100%;border-collapse:collapse;font-size:13.5px}
+  table.bill th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:6px 4px;border-bottom:1px solid var(--line)}
+  table.bill td{padding:8px 4px;border-bottom:1px solid #f0f4f2;vertical-align:top}
+  table.bill td.r,table.bill th.r{text-align:right}
+  .totals{margin-top:10px}
+  .totals .line{display:flex;justify-content:space-between;padding:5px 0;font-size:14px}
+  .totals .line.grand{border-top:1.5px dashed var(--line);margin-top:6px;padding-top:10px;font-size:17px;font-weight:800}
+  .qtybox{display:flex;align-items:center;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;flex:0 0 auto}
+  .qtybox button{width:32px;height:32px;display:grid;place-items:center;font-size:16px;font-weight:700;color:var(--pri);background:#fff}
+  .qtybox span{min-width:30px;text-align:center;font-weight:700;font-size:14px}
+  .searchbar{display:flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 13px;box-shadow:var(--shadow)}
+  .searchbar input{border:0;outline:none;flex:1;font-size:16px;background:transparent}
+  .print-only{display:none}
+
+  @media print{
+    body{background:#fff}
+    body > *:not(#printArea){display:none !important}
+    #printArea{display:block !important;padding:0;color:#000}
+    #printArea .p-shop{font-size:19px;font-weight:800}
+    #printArea table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+    #printArea th,#printArea td{border-bottom:1px solid #999;padding:5px 3px;text-align:left}
+    #printArea td.r,#printArea th.r{text-align:right}
+    #printArea .p-tot{display:flex;justify-content:space-between;padding:3px 0;font-size:12.5px}
+    #printArea .p-grand{display:flex;justify-content:space-between;border-top:1px solid #000;margin-top:6px;padding-top:6px;font-weight:800;font-size:14px}
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modal" class="modal-wrap hidden"></div>
+<div id="printArea"></div>
+<script>
+"use strict";
+
+/* ============================================================
+   Dukaan Saathi — billing, stock, khata. Single file, offline.
+   Data: localStorage. Login: local PIN (device lock only).
+   ============================================================ */
+
+var LS_KEY = 'dukaan_saathi_v1';
+var SS_KEY = 'dukaan_saathi_session';
+var DB = null;
+var session = null;      // user id
+var tab = 'home';
+var cart = [];           // [{pid, qty}]
+var billCust = '';       // customer id or ''
+var billMode = 'cash';
+var billDisc = 0;
+var prodQ = '';
+var stockQ = '';
+var custQ = '';
+var reportDays = 7;
+var loginUser = '';
+var pendingImport = null;
+
+/* ---------- helpers ---------- */
+function defaultDB(){
+  return {
+    v: 1,
+    users: [],
+    products: [],
+    customers: [],
+    invoices: [],
+    payments: [],
+    settings: { shopName: 'Meri Dukaan', address: '', phone: '', gstin: '', distPhone: '', nextInvoiceNo: 1, lowStock: 5,
+      sync: { url: '', code: '', auto: true, autoBill: true, sent: [] } },
+    pending: []
+  };
+}
+function loadDB(){
+  try {
+    var raw = localStorage.getItem(LS_KEY);
+    if (!raw) return defaultDB();
+    var d = JSON.parse(raw);
+    var base = defaultDB();
+    for (var k in base) if (!(k in d)) d[k] = base[k];
+    for (var s in base.settings) if (!(s in d.settings)) d.settings[s] = base.settings[s];
+    if (!d.settings.sync) d.settings.sync = { url: '', code: '', auto: true, autoBill: true, sent: [] };
+    if (!d.pending) d.pending = [];
+    return d;
+  } catch (e) { return defaultDB(); }
+}
+function saveDB(){
+  try { localStorage.setItem(LS_KEY, JSON.stringify(DB)); }
+  catch (e) { toast('Data save nahi hua — storage bhar gaya hai'); }
+}
+function uid(p){
+  return (p || 'id') + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+function hashPin(s){
+  var h = 5381;
+  s = String(s);
+  for (var i = 0; i < s.length; i++) h = (((h << 5) + h) ^ s.charCodeAt(i)) >>> 0;
+  return h.toString(36);
+}
+function r2(n){ return Math.round((Number(n) || 0) * 100) / 100; }
+function money(n){
+  var v = r2(n);
+  return '\u20B9' + v.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+}
+function dmy(iso){
+  var d = new Date(iso);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+function dm(iso){
+  var d = new Date(iso);
+  return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) + ', ' +
+    d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+}
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+    return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+  });
+}
+function num(v){ var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+function initials(s){
+  s = String(s || '?').trim();
+  return s ? s.slice(0, 1).toUpperCase() : '?';
+}
+function toast(msg){
+  var old = document.querySelector('.toast');
+  if (old) old.remove();
+  var t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function(){ if (t.parentNode) t.remove(); }, 2400);
+}
+function currentUser(){
+  for (var i = 0; i < DB.users.length; i++) if (DB.users[i].id === session) return DB.users[i];
+  return null;
+}
+function prod(id){ return DB.products.find(function(p){ return p.id === id; }) || null; }
+function cust(id){ return DB.customers.find(function(c){ return c.id === id; }) || null; }
+function inv(id){ return DB.invoices.find(function(i){ return i.id === id; }) || null; }
+
+/* ---------- boot ---------- */
+DB = loadDB();
+try { session = sessionStorage.getItem(SS_KEY) || null; } catch (e) { session = null; }
+if (session && !currentUser()) session = null;
+
+function boot(){
+  if (!DB.users.length) renderSetup();
+  else if (!session) renderLogin();
+  else renderApp();
+}
+
+/* ============================================================
+   SETUP / LOGIN
+   ============================================================ */
+function renderSetup(){
+  document.getElementById('app').innerHTML =
+    '<div class="auth">' +
+      '<div class="brand"><div class="mark">D</div><div>' +
+        '<h1>Dukaan Saathi</h1>' +
+        '<div class="small muted">Billing, stock aur khata — sab ek jagah</div>' +
+      '</div></div>' +
+      '<div class="card">' +
+        '<div class="b">Pehli baar setup</div>' +
+        '<div class="small muted">Shop ki detail aur apna 4-digit PIN daalein. Ye PIN isi phone par app kholne ke liye hai.</div>' +
+        '<div class="field"><label>Shop ka naam</label><input class="inp" id="suShop" placeholder="Jaise: Sharma Kirana Store" value="' + esc(DB.settings.shopName === 'Meri Dukaan' ? '' : DB.settings.shopName) + '"></div>' +
+        '<div class="field"><label>Aapka naam (owner)</label><input class="inp" id="suName" placeholder="Jaise: Aman Sharma"></div>' +
+        '<div class="grid2">' +
+          '<div class="field"><label>4-digit PIN</label><input class="inp" id="suPin" inputmode="numeric" maxlength="4" placeholder="0000"></div>' +
+          '<div class="field"><label>PIN dobara</label><input class="inp" id="suPin2" inputmode="numeric" maxlength="4" placeholder="0000"></div>' +
+        '</div>' +
+        '<label class="row small mt12" style="gap:8px;color:var(--muted)"><input type="checkbox" id="suDemo" style="width:18px;height:18px"> Demo data bhar dein (test karne ke liye)</label>' +
+        '<button class="btn block mt16" data-act="doSetup">App shuru karein</button>' +
+      '</div>' +
+      '<div class="small muted center mt16">Saara data sirf isi phone mein rehta hai. Backup ke liye Report tab se export karein.</div>' +
+    '</div>';
+}
+
+function doSetup(){
+  var shop = document.getElementById('suShop').value.trim();
+  var name = document.getElementById('suName').value.trim();
+  var p1 = document.getElementById('suPin').value.trim();
+  var p2 = document.getElementById('suPin2').value.trim();
+  var demo = document.getElementById('suDemo').checked;
+  if (!shop) return toast('Shop ka naam likhein');
+  if (!name) return toast('Apna naam likhein');
+  if (!/^\d{4}$/.test(p1)) return toast('PIN 4 ank ka hona chahiye');
+  if (p1 !== p2) return toast('Dono PIN same nahi hain');
+  DB.settings.shopName = shop;
+  var u = { id: uid('usr'), name: name, role: 'owner', pin: hashPin(p1), created: new Date().toISOString() };
+  DB.users.push(u);
+  session = u.id;
+  if (demo) seedDemo();
+  saveDB();
+  try { sessionStorage.setItem(SS_KEY, session); } catch (e) {}
+  toast('Swagat, ' + name + '!');
+  renderApp();
+}
+
+function seedDemo(){
+  var list = [
+    { name: 'Tata Salt 1kg', sku: 'SALT1', price: 28, cost: 24, gst: 5, stock: 40, unit: 'pkt' },
+    { name: 'Aashirvaad Atta 5kg', sku: 'ATTA5', price: 275, cost: 250, gst: 5, stock: 12, unit: 'bag' },
+    { name: 'Amul Butter 500g', sku: 'AMUL500', price: 285, cost: 265, gst: 12, stock: 8, unit: 'pcs' },
+    { name: 'Parle-G Biscuit', sku: 'PG', price: 10, cost: 8.5, gst: 18, stock: 120, unit: 'pcs' },
+    { name: 'Fortune Sunflower Oil 1L', sku: 'OIL1', price: 145, cost: 132, gst: 5, stock: 4, unit: 'btl' },
+    { name: 'Surf Excel 1kg', sku: 'SURF1', price: 130, cost: 118, gst: 18, stock: 15, unit: 'pkt' }
+  ];
+  list.forEach(function(p){
+    DB.products.push({ id: uid('prd'), name: p.name, sku: p.sku, price: p.price, cost: p.cost, gst: p.gst, stock: p.stock, unit: p.unit, created: new Date().toISOString() });
+  });
+  var cs = [
+    { name: 'Ramesh Yadav', phone: '9876543210' },
+    { name: 'Sunita Devi', phone: '9812345670' },
+    { name: 'Imran Khan', phone: '9900112233' }
+  ];
+  cs.forEach(function(c){
+    DB.customers.push({ id: uid('cus'), name: c.name, phone: c.phone, address: '', balance: 0, created: new Date().toISOString() });
+  });
+  var now = new Date().toISOString();
+  function mk(items, mode, cid){
+    var sub = 0, gstA = 0;
+    items.forEach(function(it){
+      var p = DB.products.find(function(x){ return x.name === it[0]; });
+      if (!p) return;
+      sub += p.price * it[1];
+      gstA += p.price * it[1] * p.gst / 100;
+    });
+    var total = r2(sub + gstA);
+    var i = {
+      id: uid('inv'), no: DB.settings.nextInvoiceNo++, date: now,
+      customerId: cid || null, items: items.map(function(it){
+        var p = DB.products.find(function(x){ return x.name === it[0]; });
+        return { pid: p.id, name: p.name, qty: it[1], price: p.price, gst: p.gst };
+      }),
+      subtotal: r2(sub), gstAmount: r2(gstA), discount: 0, total: total,
+      paid: mode === 'udhaar' ? 0 : total, mode: mode, userId: session
+    };
+    DB.invoices.push(i);
+    if (mode === 'udhaar' && cid) {
+      var c = cust(cid);
+      if (c) c.balance = r2(c.balance + total);
+    }
+  }
+  mk([['Tata Salt 1kg', 2], ['Parle-G Biscuit', 5]], 'cash', DB.customers[0].id);
+  mk([['Aashirvaad Atta 5kg', 1], ['Amul Butter 500g', 1]], 'upi', DB.customers[1].id);
+  mk([['Fortune Sunflower Oil 1L', 2]], 'udhaar', DB.customers[2].id);
+}
+
+function renderLogin(){
+  if (!loginUser && DB.users.length) loginUser = DB.users[0].id;
+  var tiles = DB.users.map(function(u){
+    return '<button class="user-tile ' + (u.id === loginUser ? 'on' : '') + '" data-act="pickUser" data-id="' + u.id + '">' +
+      '<span class="av" style="width:22px;height:22px;border-radius:7px;background:' + (u.id === loginUser ? '#fff' : 'var(--pri-soft)') + ';display:grid;place-items:center;font-size:11px">' + esc(initials(u.name)) + '</span>' +
+      esc(u.name) + '</button>';
+  }).join('');
+  document.getElementById('app').innerHTML =
+    '<div class="auth">' +
+      '<div class="brand"><div class="mark">D</div><div>' +
+        '<h1>' + esc(DB.settings.shopName) + '</h1>' +
+        '<div class="small muted">Dukaan Saathi</div>' +
+      '</div></div>' +
+      '<div class="card">' +
+        '<div class="b">Login karein</div>' +
+        '<div class="small muted">User chunein aur PIN daalein.</div>' +
+        '<div class="users mt8">' + tiles + '</div>' +
+        '<div class="pinrow"><input class="inp" id="loginPin" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off"></div>' +
+        '<button class="btn block mt12" data-act="doLogin">Login</button>' +
+      '</div>' +
+      '<div class="small muted center mt16">PIN bhool gaye? Is phone ka data reset karna padega (Report tab → Backup pehle le lein).</div>' +
+    '</div>';
+  var el = document.getElementById('loginPin');
+  if (el) { el.focus(); el.addEventListener('keydown', function(e){ if (e.key === 'Enter') doLogin(); }); }
+}
+
+function pickUser(id){ loginUser = id; renderLogin(); }
+
+function doLogin(){
+  var el = document.getElementById('loginPin');
+  var pin = el ? el.value.trim() : '';
+  var u = DB.users.find(function(x){ return x.id === loginUser; });
+  if (!u) return toast('User chunein');
+  if (hashPin(pin) !== u.pin) { if (el) el.value = ''; return toast('Galat PIN, dobara koshish karein'); }
+  session = u.id;
+  try { sessionStorage.setItem(SS_KEY, session); } catch (e) {}
+  cart = []; billCust = ''; billMode = 'cash'; billDisc = 0; tab = 'home';
+  renderApp();
+}
+function logout(){
+  session = null;
+  try { sessionStorage.removeItem(SS_KEY); } catch (e) {}
+  loginUser = '';
+  renderLogin();
+}
+
+/* ============================================================
+   APP SHELL
+   ============================================================ */
+var TABS = [
+  { id: 'home', ic: '🏠', label: 'Home' },
+  { id: 'bill', ic: '🧾', label: 'Bill' },
+  { id: 'stock', ic: '📦', label: 'Stock' },
+  { id: 'cust', ic: '👥', label: 'Customers' },
+  { id: 'report', ic: '📊', label: 'Report' }
+];
+
+function renderApp(){
+  var u = currentUser();
+  var nav = TABS.map(function(t){
+    return '<button class="' + (tab === t.id ? 'on' : '') + '" data-act="nav" data-id="' + t.id + '">' +
+      '<span class="ic">' + t.ic + '</span>' + t.label + '</button>';
+  }).join('');
+  document.getElementById('app').innerHTML =
+    '<div class="topbar">' +
+      '<div class="logo">' + esc(initials(DB.settings.shopName)) + '</div>' +
+      '<div class="who"><div class="shop">' + esc(DB.settings.shopName) + '</div>' +
+        '<div class="sub">' + esc(u ? u.name : '') + ' • ' + new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) + '</div></div>' +
+      '<button class="icon-btn" data-act="settings" title="Settings">⚙</button>' +
+      '<button class="icon-btn" data-act="logout" title="Logout">⏻</button>' +
+    '</div>' +
+    '<main id="view"></main>' +
+    '<nav class="tabs">' + nav + '</nav>';
+  renderView();
+}
+
+function renderView(){
+  var v = document.getElementById('view');
+  if (!v) return;
+  if (tab === 'home') v.innerHTML = viewHome();
+  else if (tab === 'bill') v.innerHTML = viewBill();
+  else if (tab === 'stock') v.innerHTML = viewStock();
+  else if (tab === 'cust') v.innerHTML = viewCust();
+  else if (tab === 'report') v.innerHTML = viewReport();
+  if (tab === 'bill') { var s = document.getElementById('billSearch'); if (s && prodQ) { s.focus(); s.setSelectionRange(prodQ.length, prodQ.length); } }
+}
+
+/* ============================================================
+   HOME
+   ============================================================ */
+function todayISOKey(){
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function invKey(i){ return String(i.date).slice(0, 10); }
+
+function viewHome(){
+  var today = todayISOKey();
+  var tInv = DB.invoices.filter(function(i){ return invKey(i) === today; });
+  var tSales = tInv.reduce(function(a, i){ return a + i.total; }, 0);
+  var tPaid = tInv.reduce(function(a, i){ return a + (i.paid || 0); }, 0);
+  var udhaar = DB.customers.reduce(function(a, c){ return a + (c.balance || 0); }, 0);
+  var low = DB.products.filter(function(p){ return p.stock <= (p.lowStock != null ? p.lowStock : DB.settings.lowStock); });
+  var recent = DB.invoices.slice().sort(function(a, b){ return new Date(b.date) - new Date(a.date); }).slice(0, 5);
+
+  var recentHTML = recent.length ? recent.map(function(i){
+    var c = i.customerId ? cust(i.customerId) : null;
+    var badge = i.mode === 'udhaar' ? '<span class="pill warn">Udhaar</span>' :
+      (i.mode === 'upi' ? '<span class="pill ok">UPI</span>' : '<span class="pill">Cash</span>');
+    return '<div class="item" data-act="openBill" data-id="' + i.id + '">' +
+      '<div class="av">#' + i.no + '</div>' +
+      '<div class="grow"><div class="t">' + esc(c ? c.name : 'Walk-in') + '</div>' +
+      '<div class="tiny muted">' + dm(i.date) + ' • ' + i.items.length + ' item</div></div>' +
+      '<div style="text-align:right"><div class="b">' + money(i.total) + '</div><div class="mt8">' + badge + '</div></div>' +
+      '</div>';
+  }).join('') : '<div class="empty"><div class="big">🧾</div>Abhi koi bill nahi bana.<br><span class="small">Bill tab se pehla bill banayein.</span></div>';
+
+  return '' +
+    '<div class="stats">' +
+      '<div class="stat"><div class="k">Aaj ki bikri</div><div class="v">' + money(tSales) + '</div><div class="n">' + tInv.length + ' bill • cash+UPI ' + money(tPaid) + '</div></div>' +
+      '<div class="stat"><div class="k">Kul udhaar</div><div class="v">' + money(udhaar) + '</div><div class="n">' + DB.customers.filter(function(c){ return c.balance > 0; }).length + ' customer</div></div>' +
+      '<div class="stat"><div class="k">Products</div><div class="v">' + DB.products.length + '</div><div class="n">' + low.length + ' low stock</div></div>' +
+      '<div class="stat"><div class="k">Kul bills</div><div class="v">' + DB.invoices.length + '</div><div class="n">ab tak</div></div>' +
+    '</div>' +
+    '<div class="row mt12" style="gap:8px">' +
+      '<button class="btn grow" data-act="goBill">＋ Naya bill</button>' +
+      '<button class="btn ghost grow" data-act="newProduct">＋ Product</button>' +
+    '</div>' +
+    syncCardHTML() +
+    (low.length ? '<h2 class="sec">Stock khatam ho raha hai</h2><div class="card">' + low.slice(0, 5).map(function(p){
+      return '<div class="item" data-act="editProduct" data-id="' + p.id + '">' +
+        '<div class="av">' + esc(initials(p.name)) + '</div>' +
+        '<div class="grow"><div class="t">' + esc(p.name) + '</div><div class="tiny muted">' + money(p.price) + ' / ' + esc(p.unit || 'pcs') + '</div></div>' +
+        '<span class="pill bad">' + p.stock + ' bacha</span></div>';
+    }).join('') + '</div>' : '') +
+    '<h2 class="sec">Recent bills</h2>' +
+    '<div class="card">' + recentHTML + '</div>';
+}
+
+/* ============================================================
+   BILLING
+   ============================================================ */
+function cartTotals(){
+  var sub = 0, gstA = 0, qty = 0;
+  cart.forEach(function(c){
+    var p = prod(c.pid);
+    if (!p) return;
+    var line = p.price * c.qty;
+    sub += line;
+    gstA += line * (p.gst || 0) / 100;
+    qty += c.qty;
+  });
+  var total = r2(sub + gstA - billDisc);
+  if (total < 0) total = 0;
+  return { sub: r2(sub), gst: r2(gstA), disc: r2(billDisc), total: total, qty: qty };
+}
+
+function viewBill(){
+  var t = cartTotals();
+  var custOpts = '<option value="">Walk-in customer</option>' + DB.customers.map(function(c){
+    return '<option value="' + c.id + '"' + (billCust === c.id ? ' selected' : '') + '>' + esc(c.name) + (c.balance > 0 ? ' (udhaar ' + money(c.balance) + ')' : '') + '</option>';
+  }).join('');
+
+  var q = prodQ.trim().toLowerCase();
+  var list = DB.products.filter(function(p){
+    if (!q) return true;
+    return (p.name + ' ' + (p.sku || '')).toLowerCase().indexOf(q) >= 0;
+  }).slice(0, 30);
+
+  var prodHTML = list.length ? list.map(function(p){
+    var inCart = cart.find(function(c){ return c.pid === p.id; });
+    var out = p.stock <= 0;
+    return '<div class="item" data-act="addToCart" data-id="' + p.id + '" style="' + (out ? 'opacity:.5' : '') + '">' +
+      '<div class="av">' + esc(initials(p.name)) + '</div>' +
+      '<div class="grow"><div class="t">' + esc(p.name) + '</div>' +
+      '<div class="tiny muted">' + money(p.price) + ' • GST ' + (p.gst || 0) + '% • stock ' + p.stock + ' ' + esc(p.unit || 'pcs') + '</div></div>' +
+      (inCart ? '<span class="pill ok">' + inCart.qty + ' in bill</span>' : '<span class="pill">＋</span>') +
+      '</div>';
+  }).join('') : '<div class="empty"><div class="big">📦</div>Koi product nahi mila.<br><span class="small">Stock tab se product jodein.</span></div>';
+
+  var cartHTML = cart.length ? cart.map(function(c){
+    var p = prod(c.pid);
+    if (!p) return '';
+    return '<div class="item">' +
+      '<div class="grow"><div class="t">' + esc(p.name) + '</div>' +
+      '<div class="tiny muted">' + money(p.price) + ' × ' + c.qty + ' = ' + money(p.price * c.qty) + '</div></div>' +
+      '<div class="qtybox"><button data-act="decQty" data-id="' + p.id + '">−</button><span>' + c.qty + '</span><button data-act="incQty" data-id="' + p.id + '">+</button></div>' +
+      '</div>';
+  }).join('') : '<div class="empty small">Cart khali hai — upar se product tap karein.</div>';
+
+  return '' +
+    '<div class="card">' +
+      '<div class="field" style="margin-top:0"><label>Customer</label>' +
+        '<select class="inp" data-input="billCust">' + custOpts + '</select></div>' +
+      '<div class="searchbar mt12">🔎<input id="billSearch" data-input="prodSearch" placeholder="Product dhundein (naam ya code)" value="' + esc(prodQ) + '"></div>' +
+    '</div>' +
+    '<div class="card" style="padding:6px 14px">' + prodHTML + '</div>' +
+    '<h2 class="sec">Bill items (' + t.qty + ')</h2>' +
+    '<div class="card">' + cartHTML + '</div>' +
+    '<div class="card">' +
+      '<div class="row between"><div class="small muted">Bill discount (₹)</div>' +
+        '<input class="inp" style="width:110px;text-align:right;padding:8px 10px" inputmode="decimal" data-input="billDisc" value="' + (billDisc ? billDisc : '') + '" placeholder="0"></div>' +
+      '<div class="totals">' +
+        '<div class="line"><span class="muted">Subtotal</span><span>' + money(t.sub) + '</span></div>' +
+        '<div class="line"><span class="muted">GST</span><span>' + money(t.gst) + '</span></div>' +
+        (t.disc ? '<div class="line"><span class="muted">Discount</span><span>− ' + money(t.disc) + '</span></div>' : '') +
+        '<div class="line grand"><span>Total</span><span>' + money(t.total) + '</span></div>' +
+      '</div>' +
+      '<div class="mt12"><label class="small b muted">Payment</label>' +
+        '<div class="seg mt8">' +
+          '<button class="' + (billMode === 'cash' ? 'on' : '') + '" data-act="mode" data-id="cash">Cash</button>' +
+          '<button class="' + (billMode === 'upi' ? 'on' : '') + '" data-act="mode" data-id="upi">UPI</button>' +
+          '<button class="' + (billMode === 'udhaar' ? 'on' : '') + '" data-act="mode" data-id="udhaar">Udhaar</button>' +
+        '</div>' +
+      '</div>' +
+      '<button class="btn block mt16" data-act="saveBill"' + (cart.length ? '' : ' disabled') + '>Bill banao • ' + money(t.total) + '</button>' +
+      '<button class="btn ghost block mt8" data-act="shareOrder"' + (cart.length ? '' : ' disabled') + '>📤 Distributor ko order bhejein</button>' +
+    '</div>';
+}
+
+function addToCart(pid){
+  var p = prod(pid);
+  if (!p) return;
+  if (p.stock <= 0) return toast('Stock khatam hai — pehle stock jodein');
+  var c = cart.find(function(x){ return x.pid === pid; });
+  if (c) {
+    if (c.qty >= p.stock) return toast('Sirf ' + p.stock + ' stock hai');
+    c.qty++;
+  } else {
+    cart.push({ pid: pid, qty: 1 });
+  }
+  renderView();
+}
+function incQty(pid){
+  var p = prod(pid), c = cart.find(function(x){ return x.pid === pid; });
+  if (!p || !c) return;
+  if (c.qty >= p.stock) return toast('Sirf ' + p.stock + ' stock hai');
+  c.qty++; renderView();
+}
+function decQty(pid){
+  var c = cart.find(function(x){ return x.pid === pid; });
+  if (!c) return;
+  c.qty--;
+  if (c.qty <= 0) cart = cart.filter(function(x){ return x.pid !== pid; });
+  renderView();
+}
+
+function saveBill(){
+  if (!cart.length) return toast('Cart khali hai');
+  var items = [];
+  for (var i = 0; i < cart.length; i++) {
+    var p = prod(cart[i].pid);
+    if (!p) continue;
+    if (cart[i].qty > p.stock) return toast(p.name + ' ka stock kam hai (' + p.stock + ' bacha)');
+    items.push({ pid: p.id, name: p.name, qty: cart[i].qty, price: p.price, gst: p.gst || 0 });
+  }
+  if (!items.length) return toast('Koi valid item nahi');
+  if (billMode === 'udhaar' && !billCust) return toast('Udhaar ke liye customer chunein');
+
+  var t = cartTotals();
+  var newInv = {
+    id: uid('inv'), no: DB.settings.nextInvoiceNo, date: new Date().toISOString(),
+    customerId: billCust || null, items: items,
+    subtotal: t.sub, gstAmount: t.gst, discount: t.disc, total: t.total,
+    paid: billMode === 'udhaar' ? 0 : t.total, mode: billMode, userId: session
+  };
+  DB.settings.nextInvoiceNo++;
+  DB.invoices.push(newInv);
+  items.forEach(function(it){
+    var p = prod(it.pid);
+    if (p) p.stock = r2(p.stock - it.qty);
+  });
+  if (billMode === 'udhaar' && billCust) {
+    var c = cust(billCust);
+    if (c) c.balance = r2((c.balance || 0) + t.total);
+  }
+  if (syncReady() && syncCfg().autoBill) queueBillUpload(newInv);
+  saveDB();
+  cart = []; billDisc = 0; billMode = 'cash';
+  renderView();
+  showBillModal(newInv.id);
+}
+
+/* ============================================================
+   BILL VIEW / PRINT
+   ============================================================ */
+function invoiceInnerHTML(i, forPrint){
+  var c = i.customerId ? cust(i.customerId) : null;
+  var s = DB.settings;
+  var rows = i.items.map(function(it, n){
+    return '<tr><td>' + (n + 1) + '. ' + esc(it.name) + '<br><span style="font-size:11px;color:#777">' + money(it.price) + ' × ' + it.qty + (it.gst ? ' • GST ' + it.gst + '%' : '') + '</span></td>' +
+      '<td class="r">' + money(it.price * it.qty) + '</td></tr>';
+  }).join('');
+  var head = '<div class="p-shop">' + esc(s.shopName) + '</div>' +
+    (s.address ? '<div style="font-size:11.5px">' + esc(s.address) + '</div>' : '') +
+    (s.phone ? '<div style="font-size:11.5px">Ph: ' + esc(s.phone) + '</div>' : '') +
+    (s.gstin ? '<div style="font-size:11.5px">GSTIN: ' + esc(s.gstin) + '</div>' : '');
+  return '' +
+    head +
+    '<div style="display:flex;justify-content:space-between;margin-top:8px;font-size:12px;border-top:1px dashed #999;padding-top:6px">' +
+      '<div><b>Bill #' + i.no + '</b><br>' + dmy(i.date) + '</div>' +
+      '<div style="text-align:right">' + esc(c ? c.name : 'Walk-in') + (c && c.phone ? '<br>' + esc(c.phone) : '') + '</div>' +
+    '</div>' +
+    '<table><thead><tr><th>Item</th><th class="r">Amount</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+    '<div class="p-tot"><span>Subtotal</span><span>' + money(i.subtotal) + '</span></div>' +
+    (i.gstAmount ? '<div class="p-tot"><span>GST</span><span>' + money(i.gstAmount) + '</span></div>' : '') +
+    (i.discount ? '<div class="p-tot"><span>Discount</span><span>− ' + money(i.discount) + '</span></div>' : '') +
+    '<div class="p-grand"><span>Total</span><span>' + money(i.total) + '</span></div>' +
+    '<div class="p-tot"><span>Payment</span><span>' + (i.mode === 'udhaar' ? 'Udhaar (baaki)' : i.mode.toUpperCase()) + '</span></div>' +
+    '<div style="margin-top:10px;font-size:11px;text-align:center;color:#666">Dhanyavaad! Dobara aayein.</div>';
+}
+
+function showBillModal(id){
+  var i = inv(id);
+  if (!i) return;
+  showModal(
+    '<div class="sheet-head"><div><h3>Bill #' + i.no + ' ban gaya</h3>' +
+      '<div class="small muted">' + dmy(i.date) + ' • ' + money(i.total) + '</div></div>' +
+      '<button class="x" data-act="closeModal">✕</button></div>' +
+    '<div class="card" style="box-shadow:none;background:#fafcfb">' + invoiceInnerHTML(i) + '</div>' +
+    '<div class="row mt12" style="gap:8px">' +
+      '<button class="btn grow" data-act="printBill" data-id="' + i.id + '">🖨 Print</button>' +
+      '<button class="btn ghost grow" data-act="shareBill" data-id="' + i.id + '">💬 WhatsApp</button>' +
+    '</div>' +
+    '<button class="btn line block mt8" data-act="closeModal">Ho gaya</button>'
+  );
+}
+
+function printBill(id){
+  var i = inv(id);
+  if (!i) return;
+  document.getElementById('printArea').innerHTML = invoiceInnerHTML(i, true);
+  if (window.AndroidBridge && window.AndroidBridge.printPage) {
+    try { window.AndroidBridge.printPage(); return; } catch (e) {}
+  }
+  window.print();
+}
+
+function shareBill(id){
+  var i = inv(id);
+  if (!i) return;
+  var c = i.customerId ? cust(i.customerId) : null;
+  var txt = '*' + DB.settings.shopName + '*\nBill #' + i.no + ' — ' + dmy(i.date) + '\n';
+  if (c) txt += 'Customer: ' + c.name + '\n';
+  txt += '----------------\n';
+  i.items.forEach(function(it){ txt += it.name + ' × ' + it.qty + ' = ' + money(it.price * it.qty) + '\n'; });
+  txt += '----------------\n';
+  txt += 'Subtotal: ' + money(i.subtotal) + '\n';
+  if (i.gstAmount) txt += 'GST: ' + money(i.gstAmount) + '\n';
+  if (i.discount) txt += 'Discount: -' + money(i.discount) + '\n';
+  txt += '*Total: ' + money(i.total) + '*\n';
+  txt += i.mode === 'udhaar' ? 'Payment: Udhaar (khate mein joda gaya)' : 'Payment: ' + i.mode.toUpperCase();
+  txt += '\n\nDhanyavaad!';
+  openExternal('https://wa.me/?text=' + encodeURIComponent(txt));
+}
+
+/* ============================================================
+   STOCK
+   ============================================================ */
+function viewStock(){
+  var q = stockQ.trim().toLowerCase();
+  var list = DB.products.filter(function(p){
+    if (!q) return true;
+    return (p.name + ' ' + (p.sku || '')).toLowerCase().indexOf(q) >= 0;
+  }).sort(function(a, b){ return a.name.localeCompare(b.name); });
+  var low = DB.products.filter(function(p){ return p.stock <= (p.lowStock != null ? p.lowStock : DB.settings.lowStock); });
+  var value = DB.products.reduce(function(a, p){ return a + (p.cost || 0) * p.stock; }, 0);
+
+  var rows = list.length ? list.map(function(p){
+    var isLow = p.stock <= (p.lowStock != null ? p.lowStock : DB.settings.lowStock);
+    return '<div class="item" data-act="editProduct" data-id="' + p.id + '">' +
+      '<div class="av">' + esc(initials(p.name)) + '</div>' +
+      '<div class="grow"><div class="t">' + esc(p.name) + '</div>' +
+      '<div class="tiny muted">' + money(p.price) + ' • GST ' + (p.gst || 0) + '%' + (p.sku ? ' • ' + esc(p.sku) : '') + '</div></div>' +
+      '<span class="pill ' + (isLow ? 'bad' : 'ok') + '">' + p.stock + ' ' + esc(p.unit || 'pcs') + '</span>' +
+      '</div>';
+  }).join('') : '<div class="empty"><div class="big">📦</div>Koi product nahi.<br><span class="small">"＋ Naya product" se shuru karein.</span></div>';
+
+  return '' +
+    '<div class="stats">' +
+      '<div class="stat"><div class="k">Total products</div><div class="v">' + DB.products.length + '</div><div class="n">' + low.length + ' low stock</div></div>' +
+      '<div class="stat"><div class="k">Stock value (cost)</div><div class="v">' + money(value) + '</div><div class="n">kharid ke hisaab se</div></div>' +
+    '</div>' +
+    '<div class="searchbar mt12">🔎<input data-input="stockSearch" placeholder="Product ya code dhundein" value="' + esc(stockQ) + '"></div>' +
+    '<button class="btn block mt12" data-act="newProduct">＋ Naya product jodein</button>' +
+    '<h2 class="sec">Saare products</h2>' +
+    '<div class="card">' + rows + '</div>';
+}
+
+function productModal(id){
+  var p = id ? prod(id) : null;
+  var gsts = [0, 5, 12, 18, 28];
+  var gstOpts = gsts.map(function(g){ return '<option value="' + g + '"' + ((p ? p.gst : 5) === g ? ' selected' : '') + '>' + g + '%</option>'; }).join('');
+  showModal(
+    '<div class="sheet-head"><div><h3>' + (p ? 'Product edit' : 'Naya product') + '</h3>' +
+      '<div class="small muted">' + (p ? 'Details badlein ya stock update karein' : 'Naam aur price zaroori hai') + '</div></div>' +
+      '<button class="x" data-act="closeModal">✕</button></div>' +
+    '<div class="field"><label>Product ka naam</label><input class="inp" id="pName" value="' + esc(p ? p.name : '') + '" placeholder="Jaise: Tata Salt 1kg"></div>' +
+    '<div class="grid2">' +
+      '<div class="field"><label>Code / SKU</label><input class="inp" id="pSku" value="' + esc(p ? p.sku : '') + '" placeholder="optional"></div>' +
+      '<div class="field"><label>Unit</label><input class="inp" id="pUnit" value="' + esc(p ? p.unit : 'pcs') + '" placeholder="pcs / kg / pkt"></div>' +
+    '</div>' +
+    '<div class="grid2">' +
+      '<div class="field"><label>Bikri price (₹)</label><input class="inp" id="pPrice" inputmode="decimal" value="' + (p ? p.price : '') + '" placeholder="0"></div>' +
+      '<div class="field"><label>Kharid price (₹)</label><input class="inp" id="pCost" inputmode="decimal" value="' + (p && p.cost ? p.cost : '') + '" placeholder="0"></div>' +
+    '</div>' +
+    '<div class="grid2">' +
+      '<div class="field"><label>GST</label><select class="inp" id="pGst">' + gstOpts + '</select></div>' +
+      '<div class="field"><label>Stock</label><input class="inp" id="pStock" inputmode="decimal" value="' + (p ? p.stock : 0) + '"></div>' +
+    '</div>' +
+    '<div class="field"><label>Low-stock alert (is se kam ho to alert)</label><input class="inp" id="pLow" inputmode="decimal" value="' + (p && p.lowStock != null ? p.lowStock : DB.settings.lowStock) + '"></div>' +
+    '<button class="btn block mt16" data-act="saveProduct" data-id="' + (p ? p.id : '') + '">' + (p ? 'Save karein' : 'Product jodein') + '</button>' +
+    (p ? '<div class="row mt8" style="gap:8px">' +
+      '<button class="btn ghost grow sm" data-act="quickStock" data-id="' + p.id + '">＋ Stock jodein</button>' +
+      '<button class="btn danger grow sm" data-act="delProduct" data-id="' + p.id + '">Delete</button></div>' : '')
+  );
+}
+
+function saveProduct(id){
+  var name = document.getElementById('pName').value.trim();
+  var price = num(document.getElementById('pPrice').value);
+  if (!name) return toast('Product ka naam likhein');
+  if (price <= 0) return toast('Bikri price daalein');
+  var data = {
+    name: name,
+    sku: document.getElementById('pSku').value.trim(),
+    unit: document.getElementById('pUnit').value.trim() || 'pcs',
+    price: r2(price),
+    cost: r2(num(document.getElementById('pCost').value)),
+    gst: num(document.getElementById('pGst').value),
+    stock: r2(num(document.getElementById('pStock').value)),
+    lowStock: r2(num(document.getElementById('pLow').value))
+  };
+  if (id) {
+    var p = prod(id);
+    if (p) for (var k in data) p[k] = data[k];
+    toast('Product update ho gaya');
+  } else {
+    data.id = uid('prd');
+    data.created = new Date().toISOString();
+    DB.products.push(data);
+    toast('Product jod diya');
+  }
+  saveDB(); closeModal(); renderView();
+}
+
+function delProduct(id){
+  var p = prod(id);
+  if (!p) return;
+  if (!confirm('"' + p.name + '" delete karein? Purane bills par asar nahi padega.')) return;
+  DB.products = DB.products.filter(function(x){ return x.id !== id; });
+  cart = cart.filter(function(c){ return c.pid !== id; });
+  saveDB(); closeModal(); renderView(); toast('Product delete ho gaya');
+}
+
+function quickStockModal(id){
+  var p = prod(id);
+  if (!p) return;
+  showModal(
+    '<div class="sheet-head"><div><h3>Stock update</h3><div class="small muted">' + esc(p.name) + ' • abhi ' + p.stock + ' ' + esc(p.unit || 'pcs') + '</div></div>' +
+      '<button class="x" data-act="closeModal">✕</button></div>' +
+    '<div class="field"><label>Kitna stock jodna hai? (ghatane ke liye minus)</label><input class="inp" id="qsAmt" inputmode="decimal" placeholder="jaise: 24 ya -3"></div>' +
+    '<button class="btn block mt12" data-act="doQuickStock" data-id="' + p.id + '">Update karein</button>'
+  );
+  var el = document.getElementById('qsAmt');
+  if (el) el.focus();
+}
+function doQuickStock(id){
+  var p = prod(id);
+  if (!p) return;
+  var amt = num(document.getElementById('qsAmt').value);
+  if (!amt) return toast('Kitna stock jodna hai?');
+  p.stock = r2(p.stock + amt);
+  if (p.stock < 0) p.stock = 0;
+  saveDB(); closeModal(); renderView(); toast('Stock ab ' + p.stock + ' ' + (p.unit || 'pcs'));
+}
+
+/* ============================================================
+   CUSTOMERS / KHATA
+   ============================================================ */
+function viewCust(){
+  var q = custQ.trim().toLowerCase();
+  var list = DB.customers.filter(function(c){
+    if (!q) return true;
+    return (c.name + ' ' + (c.phone || '')).toLowerCase().indexOf(q) >= 0;
+  }).sort(function(a, b){ return (b.balance || 0) - (a.balance || 0); });
+  var total = DB.customers.reduce(function(a, c){ return a + (c.balance || 0); }, 0);
+
+  var rows = list.length ? list.map(function(c){
+    var bal = c.balance || 0;
+    return '<div class="item" data-act="openCustomer" data-id="' + c.id + '">' +
+      '<div class="av">' + esc(initials(c.name)) + '</div>' +
+      '<div class="grow"><div class="t">' + esc(c.name) + '</div>' +
+      '<div class="tiny muted">' + (c.phone ? esc(c.phone) : 'no phone') + '</div></div>' +
+      (bal > 0 ? '<span class="pill warn">' + money(bal) + '</span>' : '<span class="pill ok">Clear</span>') +
+      '</div>';
+  }).join('') : '<div class="empty"><div class="big">👥</div>Koi customer nahi.<br><span class="small">"＋ Naya customer" se jodein.</span></div>';
+
+  return '' +
+    '<div class="stats">' +
+      '<div class="stat"><div class="k">Kul udhaar</div><div class="v">' + money(total) + '</div><div class="n">' + DB.customers.filter(function(c){ return c.balance > 0; }).length + ' customer se lena hai</div></div>' +
+      '<div class="stat"><div class="k">Customers</div><div class="v">' + DB.customers.length + '</div><div class="n">kul</div></div>' +
+    '</div>' +
+    '<div class="searchbar mt12">🔎<input data-input="custSearch" placeholder="Naam ya phone dhundein" value="' + esc(custQ) + '"></div>' +
+    '<button class="btn block mt12" data-act="newCustomer">＋ Naya customer</button>' +
+    '<h2 class="sec">Khata list</h2>' +
+    '<div class="card">' + rows + '</div>';
+}
+
+function customerModal(id){
+  var c = id ? cust(id) : null;
+  showModal(
+    '<div class="sheet-head"><div><h3>' + (c ? 'Customer edit' : 'Naya customer') + '</h3>' +
+      '<div class="small muted">Naam zaroori hai, phone optional</div></div>' +
+      '<button class="x" data-act="closeModal">✕</button></div>' +
+    '<div class="field"><label>Naam</label><input class="inp" id="cName" value="' + esc(c ? c.name : '') + '" placeholder="Jaise: Ramesh Yadav"></div>' +
+    '<div class="field"><label>Phone</label><input class="inp" id="cPhone" inputmode="tel" value="' + esc(c ? c.phone : '') + '" placeholder="10 digit number"></div>' +
+    '<div class="field"><label>Pata (optional)</label><input class="inp" id="cAddr" value="' + esc(c ? c.address : '') + '"></div>' +
+    (c ? '<div class="field"><label>Purana udhaar (₹)</label><input class="inp" id="cBal" inputmode="decimal" value="' + (c.balance || 0) + '"><div class="tiny muted mt8">Sirf adjust karne ke liye — galat entry theek karne par kaam aayega.</div></div>' : '') +
+    '<button class="btn block mt16" data-act="saveCustomer" data-id="' + (c ? c.id : '') + '">' + (c ? 'Save karein' : 'Customer jodein') + '</button>' +
+    (c ? '<button class="btn danger block mt8" data-act="delCustomer" data-id="' + c.id + '">Delete customer</button>' : '')
+  );
+}
+
+function saveCustomer(id){
+  var name = document.getElementById('cName').value.trim();
+  if (!name) return toast('Naam likhein');
+  var phone = document.getElementById('cPhone').value.trim();
+  var addr = document.getElementById('cAddr').value.trim();
+  if (id) {
+    var c = cust(id);
+    if (c) {
+      c.name = name; c.phone = phone; c.address = addr;
+      var bEl = document.getElementById('cBal');
+      if (bEl) c.balance = r2(num(bEl.value));
+    }
+    toast('Customer update ho gaya');
+  } else {
+    DB.customers.push({ id: uid('cus'), name: name, phone: phone, address: addr, balance: 0, created: new Date().toISOString() });
+    toast('Customer jod diya');
+  }
+  saveDB(); closeModal(); renderView();
+}
+
+function delCustomer(id){
+  var c = cust(id);
+  if (!c) return;
+  if (!confirm('"' + c.name + '" delete karein? Khata history se hat jayega.')) return;
+  DB.customers = DB.customers.filter(function(x){ return x.id !== id; });
+  if (billCust === id) billCust = '';
+  saveDB(); closeModal(); renderView(); toast('Customer delete ho gaya');
+}
+
+function customerDetail(id){
+  var c = cust(id);
+  if (!c) return;
+  var ledger = [];
+  DB.invoices.forEach(function(i){
+    if (i.customerId === id) ledger.push({ date: i.date, text: 'Bill #' + i.no + ' • ' + i.items.length + ' item', amt: i.total, type: i.mode === 'udhaar' ? 'due' : 'sale', mode: i.mode });
+  });
+  DB.payments.forEach(function(p){
+    if (p.customerId === id) ledger.push({ date: p.date, text: 'Payment mila (' + p.mode.toUpperCase() + ')', amt: p.amount, type: 'pay', mode: p.mode });
+  });
+  ledger.sort(function(a, b){ return new Date(b.date) - new Date(a.date); });
+
+  var ledHTML = ledger.length ? ledger.map(function(l){
+    var color = l.type === 'due' ? 'var(--accent)' : (l.type === 'pay' ? 'var(--ok)' : 'var(--muted)');
+    var sign = l.type === 'pay' ? '− ' : '+ ';
+    return '<div class="item"><div class="grow"><div class="t small">' + esc(l.text) + '</div>' +
+      '<div class="tiny muted">' + dmy(l.date) + '</div></div>' +
+      '<div class="b" style="color:' + color + '">' + sign + money(l.amt) + '</div></div>';
+  }).join('') : '<div class="empty small">Abhi koi transaction nahi.</div>';
+
+  var wa = c.phone ? c.phone.replace(/\D/g, '') : '';
+  showModal(
+    '<div class="sheet-head"><div><h3>' + esc(c.name) + '</h3>' +
+      '<div class="small muted">' + (c.phone ? esc(c.phone) : 'no phone') + '</div></div>' +
+      '<button class="x" data-act="closeModal">✕</button></div>' +
+    '<div class="card" style="background:' + (c.balance > 0 ? '#fff9ec' : '#f3faf7') + ';box-shadow:none">' +
+      '<div class="small muted">' + (c.balance > 0 ? 'Bakaya udhaar' : 'Khata') + '</div>' +
+      '<div style="font-size:26px;font-weight:800;letter-spacing:-.02em">' + money(c.balance || 0) + '</div>' +
+    '</div>' +
+    '<div class="row mt12" style="gap:8px">' +
+      '<button class="btn grow" data-act="payCustomer" data-id="' + c.id + '">💵 Payment lo</button>' +
+      '<button class="btn ghost grow" data-act="editCustomer" data-id="' + c.id + '">✎ Edit</button>' +
+    '</div>' +
+    (wa ? '<button class="btn line block mt8" data-act="waCustomer" data-id="' + c.id + '">💬 WhatsApp par reminder bhejein</button>' : '') +
+    '<h2 class="sec">Ledger</h2><div class="card">' + ledHTML + '</div>'
+  );
+}
+
+function paymentModal(id){
+  var c = cust(id);
+  if (!c) return;
+  showModal(
+    '<div class="sheet-head"><div><h3>Payment lo</h3><div class="small muted">' + esc(c.name) + ' • bakaya ' + money(c.balance || 0) + '</div></div>' +
+      '<button class="x" data-act="closeModal">✕</button></div>' +
+    '<div class="field"><label>Kitna mila (₹)</label><input class="inp" id="payAmt" inputmode="decimal" value="' + (c.balance > 0 ? c.balance : '') + '"></div>' +
+    '<div class="field"><label>Mode</label><select class="inp" id="payMode"><option value="cash">Cash</option><option value="upi">UPI</option></select></div>' +
+    '<button class="btn block mt16" data-act="savePayment" data-id="' + c.id + '">Save karein</button>'
+  );
+}
+function savePayment(id){
+  var c = cust(id);
+  if (!c) return;
+  var amt = num(document.getElementById('payAmt').value);
+  var mode = document.getElementById('payMode').value;
+  if (amt <= 0) return toast('Amount daalein');
+  DB.payments.push({ id: uid('pay'), customerId: id, amount: r2(amt), mode: mode, date: new Date().toISOString(), userId: session });
+  c.balance = r2((c.balance || 0) - amt);
+  saveDB(); closeModal(); renderView(); toast('Payment record ho gaya');
+}
+
+function waCustomer(id){
+  var c = cust(id);
+  if (!c || !c.phone) return;
+  var txt = 'Namaste ' + c.name + ', ' + DB.settings.shopName + ' se reminder: aapka khata ' + money(c.balance || 0) + ' bakaya hai. Kripya payment kar dein. Dhanyavaad!';
+  openExternal('https://wa.me/91' + c.phone.replace(/\D/g, '').slice(-10) + '?text=' + encodeURIComponent(txt));
+}
+
+/* ============================================================
+   REPORTS
+   ============================================================ */
+function rangeInvoices(days){
+  var cutoff = new Date();
+  cutoff.setHours(0, 0, 0, 0);
+  cutoff.setDate(cutoff.getDate() - (days - 1));
+  return DB.invoices.filter(function(i){ return new Date(i.date) >= cutoff; });
+}
+
+function viewReport(){
+  var invs = rangeInvoices(reportDays);
+  var sales = invs.reduce(function(a, i){ return a + i.total; }, 0);
+  var gst = invs.reduce(function(a, i){ return a + (i.gstAmount || 0); }, 0);
+  var cash = 0, upi = 0, ud = 0;
+  invs.forEach(function(i){
+    if (i.mode === 'cash') cash += i.total;
+    else if (i.mode === 'upi') upi += i.total;
+    else ud += i.total;
+  });
+  var pays = DB.payments.filter(function(p){ return new Date(p.date) >= (function(){ var d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - (reportDays - 1)); return d; })(); });
+  var collected = pays.reduce(function(a, p){ return a + p.amount; }, 0);
+
+  var prodCount = {};
+  invs.forEach(function(i){ i.items.forEach(function(it){ prodCount[it.name] = (prodCount[it.name] || 0) + it.qty; }); });
+  var top = Object.keys(prodCount).map(function(k){ return { name: k, qty: prodCount[k] }; })
+    .sort(function(a, b){ return b.qty - a.qty; }).slice(0, 5);
+  var topHTML = top.length ? top.map(function(t, n){
+    return '<div class="item"><div class="av">' + (n + 1) + '</div><div class="grow"><div class="t small">' + esc(t.name) + '</div></div><span class="pill">' + t.qty + ' bika</span></div>';
+  }).join('') : '<div class="empty small">Is period mein koi bikri nahi.</div>';
+
+  var low = DB.products.filter(function(p){ return p.stock <= (p.lowStock != null ? p.lowStock : DB.settings.lowStock); });
+  var lowHTML = low.length ? low.map(function(p){
+    return '<div class="item" data-act="editProduct" data-id="' + p.id + '"><div class="grow"><div class="t small">' + esc(p.name) + '</div>' +
+      '<div class="tiny muted">' + money(p.price) + ' / ' + esc(p.unit || 'pcs') + '</div></div><span class="pill bad">' + p.stock + '</span></div>';
+  }).join('') : '<div class="empty small">Sab stock theek hai 👍</div>';
+
+  return '' +
+    '<div class="seg">' +
+      '<button class="' + (reportDays === 1 ? 'on' : '') + '" data-act="range" data-id="1">Aaj</button>' +
+      '<button class="' + (reportDays === 7 ? 'on' : '') + '" data-act="range" data-id="7">7 din</button>' +
+      '<button class="' + (reportDays === 30 ? 'on' : '') + '" data-act="range" data-id="30">30 din</button>' +
+      '<button class="' + (reportDays === 3650 ? 'on' : '') + '" data-act="range" data-id="3650">Sab</button>' +
+    '</div>' +
+    '<div class="stats mt12">' +
+      '<div class="stat"><div class="k">Kul bikri</div><div class="v">' + money(sales) + '</div><div class="n">' + invs.length + ' bill</div></div>' +
+      '<div class="stat"><div class="k">GST</div><div class="v">' + money(gst) + '</div><div class="n">bill mein joda gaya</div></div>' +
+      '<div class="stat"><div class="k">Cash</div><div class="v">' + money(cash) + '</div><div class="n">+ UPI ' + money(upi) + '</div></div>' +
+      '<div class="stat"><div class="k">Udhaar diya</div><div class="v">' + money(ud) + '</div><div class="n">wapas mila ' + money(collected) + '</div></div>' +
+    '</div>' +
+    '<h2 class="sec">Top products</h2><div class="card">' + topHTML + '</div>' +
+    '<h2 class="sec">Low stock</h2><div class="card">' + lowHTML + '</div>' +
+    '<h2 class="sec">Data / backup</h2>' +
+    '<div class="card">' +
+      '<div class="small muted">Backup file phone mein save hoti hai. Naya phone lene par import kar lena — sab bills, stock, khata wapas aa jayega.</div>' +
+      '<button class="btn block mt12" data-act="exportData">⬇ Backup file save karein</button>' +
+      '<button class="btn line block mt8" data-act="importPick">⬆ Backup file import karein</button>' +
+      '<button class="btn line block mt8" data-act="importPaste">📋 Backup text paste karke import</button>' +
+      '<input type="file" id="importFile" accept="application/json,.json" class="hidden">' +
+    '</div>' +
+    '<div class="card mt12">' +
+      '<div class="small muted">Login users (is phone par)</div>' +
+      DB.users.map(function(u){ return '<div class="item"><div class="av">' + esc(initials(u.name)) + '</div><div class="grow"><div class="t small">' + esc(u.name) + '</div><div class="tiny muted">' + esc(u.role) + '</div></div></div>'; }).join('') +
+      '<button class="btn ghost block mt12" data-act="addUser">＋ Naya user (staff) jodein</button>' +
+    '</div>' +
+    '<h2 class="sec">App ki tarah phone par lagayein</h2>' +
+    '<div class="card">' +
+      '<div class="small">1. Ye file phone ke Chrome mein kholein.<br>2. Upar ke ⋮ menu se <b>"Add to Home screen"</b> / "Install app" dabayein.<br>3. Home screen par icon ban jayega — bina internet ke bhi chalega.</div>' +
+      '<div class="small muted mt8">Tip: ek hi phone par data rakhein. Phone badalne se pehle backup export kar lein.</div>' +
+    '</div>' +
+    '<div class="small muted center mt16">Dukaan Saathi • offline app • data sirf isi phone mein</div>';
+}
+
+function exportData(){
+  if (window.AndroidBridge && window.AndroidBridge.saveBackup) {
+    try {
+      var res = window.AndroidBridge.saveBackup('dukaan-backup-' + todayISOKey() + '.json', JSON.stringify(DB, null, 2));
+      toast(res && String(res).indexOf('ERR:') === 0 ? 'Backup save nahi hua' : 'Backup save: ' + res);
+      return;
+    } catch (e) {}
+  }
+  try {
+    var payload = JSON.stringify(DB, null, 2);
+    var blob = new Blob([payload], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'dukaan-backup-' + todayISOKey() + '.json';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    toast('Backup download ho gaya');
+  } catch (e) { toast('Backup nahi ban paya — browser se dobara koshish karein'); }
+}
+
+function applyImport(d){
+  if (!d || !Array.isArray(d.products) || !Array.isArray(d.invoices)) { toast('Ye sahi backup nahi lagta'); return false; }
+  var base = defaultDB();
+  for (var k in base) if (!(k in d)) d[k] = base[k];
+  for (var s in base.settings) if (!(s in d.settings)) d.settings[s] = base.settings[s];
+  DB = d;
+  if (!DB.users.length) DB.users = [{ id: uid('usr'), name: 'Owner', role: 'owner', pin: hashPin('1234'), created: new Date().toISOString() }];
+  session = DB.users[0].id;
+  try { sessionStorage.setItem(SS_KEY, session); } catch (e) {}
+  saveDB();
+  cart = []; billCust = ''; tab = 'home';
+  closeModal();
+  renderApp();
+  toast('Backup import ho gaya');
+  return true;
+}
+
+function importPick(){
+  var el = document.getElementById('importFile');
+  if (!el) return;
+  el.value = '';
+  el.onchange = function(){
+    var f = el.files && el.files[0];
+    if (!f) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      try {
+        var d = JSON.parse(String(reader.result));
+        if (!d || !Array.isArray(d.products)) throw new Error('bad');
+        if (confirm('Import karne se is phone ka current data replace ho jayega. Aage badhein?')) applyImport(d);
+      } catch (e) { toast('File sahi backup nahi lagti'); }
+    };
+    reader.readAsText(f);
+  };
+  el.click();
+}
+
+function importPasteModal(){
+  showModal(
+    '<div class="sheet-head"><div><h3>Backup text se import</h3><div class="small muted">Backup file khol kar poora text yahan paste karein</div></div>' +
+      '<button class="x" data-act="closeModal">✕</button></div>' +
+    '<div class="field"><label>Backup JSON</label><textarea class="inp" id="pasteBox" rows="7" placeholder="{ ... }"></textarea></div>' +
+    '<button class="btn block mt12" data-act="doPasteImport">Import karein</button>'
+  );
+}
+
+function doPasteImport(){
+  var t = document.getElementById('pasteBox').value.trim();
+  if (!t) return toast('Text paste karein');
+  try {
+    var d = JSON.parse(t);
+    if (confirm('Current data replace ho jayega. Aage badhein?')) applyImport(d);
+  } catch (e) { toast('Ye sahi backup text nahi hai'); }
+}
+
+/* ============================================================
+   SETTINGS + USER
+   ============================================================ */
+function settingsModal(){
+  var s = DB.settings;
+  showModal(
+    '<div class="sheet-head"><div><h3>Shop settings</h3><div class="small muted">Bill ke upar chhapta hai</div></div>' +
+      '<button class="x" data-act="closeModal">✕</button></div>' +
+    '<div class="field"><label>Shop ka naam</label><input class="inp" id="stShop" value="' + esc(s.shopName) + '"></div>' +
+    '<div class="field"><label>Pata</label><input class="inp" id="stAddr" value="' + esc(s.address) + '" placeholder="Jaise: Shop 4, Gandhi Market, Jaipur"></div>' +
+    '<div class="grid2">' +
+      '<div class="field"><label>Phone</label><input class="inp" id="stPhone" value="' + esc(s.phone) + '" inputmode="tel"></div>' +
+      '<div class="field"><label>GSTIN</label><input class="inp" id="stGstin" value="' + esc(s.gstin) + '"></div>' +
+    '</div>' +
+    '<div class="field"><label>Distributor ka WhatsApp number</label><input class="inp" id="stDist" value="' + esc(s.distPhone || '') + '" inputmode="tel" placeholder="10 digit (order seedha unhe jayega)"></div>' +
+    '<div class="field"><label>Default low-stock alert</label><input class="inp" id="stLow" inputmode="decimal" value="' + (s.lowStock != null ? s.lowStock : 5) + '"></div>' +
+    '<div class="divider"></div>' +
+    '<div class="b">Online sync (distributor tak)</div>' +
+    '<div class="small muted">Distributor apne app se pairing code dega. Server ka address wahi jo unke app mein hai.</div>' +
+    '<div class="field"><label>Server URL</label><input class="inp" id="syUrl" placeholder="https://mera-server.com" value="' + esc(syncCfg().url) + '"></div>' +
+    '<div class="field"><label>Pairing code</label><input class="inp" id="syCode" placeholder="DS1.xxxxxxxx.yyyyyyyy" value="' + esc(syncCfg().code) + '"></div>' +
+    '<label class="row small mt8" style="gap:8px;color:var(--muted)"><input type="checkbox" id="syAuto" style="width:18px;height:18px"' + (syncCfg().auto ? ' checked' : '') + '> Auto sync (app khulte hi bheje)</label>' +
+    '<label class="row small mt8" style="gap:8px;color:var(--muted)"><input type="checkbox" id="syBill" style="width:18px;height:18px"' + (syncCfg().autoBill ? ' checked' : '') + '> Har bill khud online bhejein</label>' +
+    '<div class="row mt12" style="gap:8px">' +
+      '<button class="btn ghost grow sm" data-act="testSync">Connection test</button>' +
+      '<button class="btn grow sm" data-act="saveSync">Online save</button>' +
+    '</div>' +
+    '<button class="btn block mt16" data-act="saveSettings">Baaki settings save karein</button>' +
+    '<button class="btn line block mt8" data-act="changePin">Apna PIN badlein</button>' +
+    '<button class="btn danger block mt8" data-act="logout">Logout</button>'
+  );
+}
+function saveSettings(){
+  DB.settings.shopName = document.getElementById('stShop').value.trim() || 'Meri Dukaan';
+  DB.settings.address = document.getElementById('stAddr').value.trim();
+  DB.settings.phone = document.getElementById('stPhone').value.trim();
+  DB.settings.gstin = document.getElementById('stGstin').value.trim();
+  DB.settings.distPhone = document.getElementById('stDist').value.trim();
+  DB.settings.lowStock = r2(num(document.getElementById('stLow').value));
+  saveDB(); closeModal(); renderApp(); toast('Settings save ho gayi');
+}
+
+function changePinModal(){
+  showModal(
+    '<div class="sheet-head"><div><h3>PIN badlein</h3><div class="small muted">4 ank ka naya PIN</div></div>' +
+      '<button class="x" data-act="closeModal">✕</button></div>' +
+    '<div class="field"><label>Purana PIN</label><input class="inp" id="cpOld" inputmode="numeric" maxlength="4"></div>' +
+    '<div class="field"><label>Naya PIN</label><input class="inp" id="cpNew" inputmode="numeric" maxlength="4"></div>' +
+    '<div class="field"><label>Naya PIN dobara</label><input class="inp" id="cpNew2" inputmode="numeric" maxlength="4"></div>' +
+    '<button class="btn block mt16" data-act="doChangePin">PIN badlein</button>'
+  );
+}
+function doChangePin(){
+  var u = currentUser();
+  if (!u) return;
+  var o = document.getElementById('cpOld').value.trim();
+  var n1 = document.getElementById('cpNew').value.trim();
+  var n2 = document.getElementById('cpNew2').value.trim();
+  if (hashPin(o) !== u.pin) return toast('Purana PIN galat hai');
+  if (!/^\d{4}$/.test(n1)) return toast('Naya PIN 4 ank ka ho');
+  if (n1 !== n2) return toast('Naye PIN match nahi kar rahe');
+  u.pin = hashPin(n1);
+  saveDB(); closeModal(); toast('PIN badal gaya');
+}
+
+function addUserModal(){
+  showModal(
+    '<div class="sheet-head"><div><h3>Naya user</h3><div class="small muted">Staff apne PIN se login kar sakta hai</div></div>' +
+      '<button class="x" data-act="closeModal">✕</button></div>' +
+    '<div class="field"><label>Naam</label><input class="inp" id="nuName" placeholder="Jaise: Suresh (counter)"></div>' +
+    '<div class="field"><label>4-digit PIN</label><input class="inp" id="nuPin" inputmode="numeric" maxlength="4"></div>' +
+    '<div class="field"><label>Role</label><select class="inp" id="nuRole"><option value="staff">Staff</option><option value="owner">Owner</option></select></div>' +
+    '<button class="btn block mt16" data-act="doAddUser">User jodein</button>'
+  );
+}
+function doAddUser(){
+  var n = document.getElementById('nuName').value.trim();
+  var p = document.getElementById('nuPin').value.trim();
+  var r = document.getElementById('nuRole').value;
+  if (!n) return toast('Naam likhein');
+  if (!/^\d{4}$/.test(p)) return toast('PIN 4 ank ka ho');
+  DB.users.push({ id: uid('usr'), name: n, role: r, pin: hashPin(p), created: new Date().toISOString() });
+  saveDB(); closeModal(); renderView(); toast('User jod diya');
+}
+
+/* ============================================================
+   MODAL + EVENTS
+   ============================================================ */
+function showModal(html){
+  var m = document.getElementById('modal');
+  m.innerHTML = '<div class="modal">' + html + '</div>';
+  m.classList.remove('hidden');
+}
+function closeModal(){
+  var m = document.getElementById('modal');
+  m.classList.add('hidden');
+  m.innerHTML = '';
+}
+
+document.addEventListener('click', function(e){
+  var el = e.target.closest('[data-act]');
+  if (!el) {
+    if (e.target.id === 'modal') closeModal();
+    return;
+  }
+  var act = el.getAttribute('data-act');
+  var id = el.getAttribute('data-id') || '';
+  switch (act) {
+    case 'doSetup': doSetup(); break;
+    case 'pickUser': pickUser(id); break;
+    case 'doLogin': doLogin(); break;
+    case 'logout': logout(); break;
+    case 'nav': tab = id; renderView(); syncNav(); break;
+    case 'goBill': tab = 'bill'; renderApp(); break;
+    case 'settings': settingsModal(); break;
+    case 'saveSettings': saveSettings(); break;
+    case 'changePin': changePinModal(); break;
+    case 'doChangePin': doChangePin(); break;
+    case 'addUser': addUserModal(); break;
+    case 'doAddUser': doAddUser(); break;
+    case 'newProduct': productModal(''); break;
+    case 'editProduct': productModal(id); break;
+    case 'saveProduct': saveProduct(id); break;
+    case 'delProduct': delProduct(id); break;
+    case 'quickStock': quickStockModal(id); break;
+    case 'doQuickStock': doQuickStock(id); break;
+    case 'addToCart': addToCart(id); break;
+    case 'incQty': incQty(id); break;
+    case 'decQty': decQty(id); break;
+    case 'mode': billMode = id; renderView(); break;
+    case 'saveBill': saveBill(); break;
+    case 'shareOrder': shareOrderModal(); break;
+    case 'onlineSend': onlineSend(); break;
+    case 'testSync': testSync(); break;
+    case 'saveSync': saveSync(); break;
+    case 'syncNow': flushQueue(); pullShopStatus(); toast('Sync ho raha hai...'); break;
+    case 'copyOrder': copyOrder(); break;
+    case 'waOrder': waOrder(); break;
+    case 'openBill': showBillModal(id); break;
+    case 'printBill': printBill(id); break;
+    case 'shareBill': shareBill(id); break;
+    case 'newCustomer': customerModal(''); break;
+    case 'editCustomer': customerModal(id); break;
+    case 'saveCustomer': saveCustomer(id); break;
+    case 'delCustomer': delCustomer(id); break;
+    case 'openCustomer': customerDetail(id); break;
+    case 'payCustomer': paymentModal(id); break;
+    case 'savePayment': savePayment(id); break;
+    case 'waCustomer': waCustomer(id); break;
+    case 'range': reportDays = parseInt(id, 10) || 7; renderView(); break;
+    case 'exportData': exportData(); break;
+    case 'importPick': importPick(); break;
+    case 'importPaste': importPasteModal(); break;
+    case 'doPasteImport': doPasteImport(); break;
+    case 'closeModal': closeModal(); break;
+    default: break;
+  }
+});
+
+document.addEventListener('input', function(e){
+  var el = e.target.closest('[data-input]');
+  if (!el) return;
+  var k = el.getAttribute('data-input');
+  if (k === 'prodSearch') {
+    prodQ = el.value;
+    rerenderProductList();
+  } else if (k === 'stockSearch') {
+    stockQ = el.value;
+    tab = 'stock'; renderView();
+  } else if (k === 'custSearch') {
+    custQ = el.value;
+    tab = 'cust'; renderView();
+  } else if (k === 'billDisc') {
+    billDisc = num(el.value);
+    updateBillTotals();
+  }
+});
+
+document.addEventListener('change', function(e){
+  var el = e.target.closest('[data-input="billCust"]');
+  if (el) { billCust = el.value; return; }
+});
+
+function syncNav(){
+  var btns = document.querySelectorAll('nav.tabs button');
+  for (var i = 0; i < btns.length; i++) {
+    var b = btns[i];
+    if (b.getAttribute('data-id') === tab) b.classList.add('on');
+    else b.classList.remove('on');
+  }
+}
+
+/* partial re-render of product search results (keeps focus) */
+function rerenderProductList(){
+  var q = prodQ.trim().toLowerCase();
+  var list = DB.products.filter(function(p){
+    if (!q) return true;
+    return (p.name + ' ' + (p.sku || '')).toLowerCase().indexOf(q) >= 0;
+  }).slice(0, 30);
+  var host = document.querySelectorAll('#view .card')[1];
+  if (!host) { renderView(); return; }
+  host.innerHTML = list.length ? list.map(function(p){
+    var inCart = cart.find(function(c){ return c.pid === p.id; });
+    var out = p.stock <= 0;
+    return '<div class="item" data-act="addToCart" data-id="' + p.id + '" style="' + (out ? 'opacity:.5' : '') + '">' +
+      '<div class="av">' + esc(initials(p.name)) + '</div>' +
+      '<div class="grow"><div class="t">' + esc(p.name) + '</div>' +
+      '<div class="tiny muted">' + money(p.price) + ' • GST ' + (p.gst || 0) + '% • stock ' + p.stock + ' ' + esc(p.unit || 'pcs') + '</div></div>' +
+      (inCart ? '<span class="pill ok">' + inCart.qty + ' in bill</span>' : '<span class="pill">＋</span>') +
+      '</div>';
+  }).join('') : '<div class="empty"><div class="big">📦</div>Koi product nahi mila.</div>';
+}
+
+/* update totals without re-render (keeps discount input focus) */
+function updateBillTotals(){
+  var t = cartTotals();
+  var grand = document.querySelector('.totals .line.grand span:last-child');
+  if (grand) grand.textContent = money(t.total);
+  var btn = document.querySelector('[data-act="saveBill"]');
+  if (btn) btn.textContent = 'Bill banao • ' + money(t.total);
+}
+
+/* ================= ONLINE SYNC ================= */
+function syncCfg(){
+  if (!DB.settings.sync) DB.settings.sync = { url: '', code: '', auto: true, autoBill: true, sent: [] };
+  return DB.settings.sync;
+}
+function parseCode(code){
+  var m = String(code || '').trim().match(/^DS1\.([A-Za-z0-9]+)\.([A-Za-z0-9]+)$/);
+  return m ? { firm: m[1], key: m[2] } : null;
+}
+function syncReady(){ var c = syncCfg(); return !!(c.url && parseCode(c.code)); }
+function api(path, opts){
+  var c = syncCfg(), pc = parseCode(c.code);
+  if (!c.url || !pc) return Promise.reject(new Error('online sync set nahi hai'));
+  var o = opts || {};
+  o.headers = { 'Content-Type': 'application/json', 'X-Firm': pc.firm, 'X-Key': pc.key };
+  var url = c.url.replace(/\/+$/, '') + path;
+  return fetch(url, o).then(function(r){
+    return r.text().then(function(t){
+      var j = {}; try { j = JSON.parse(t || '{}'); } catch (e) {}
+      if (!r.ok) throw new Error(j.error || ('Server error ' + r.status));
+      return j;
+    });
+  });
+}
+function testSync(){
+  if (!syncReady()) return toast('Pehle server URL aur pairing code bhar dein');
+  toast('Connection check...');
+  api('/api/ping').then(function(j){
+    toast('Connected: ' + ((j.firm && j.firm.name) || 'server') + ' • ' + (j.orders || 0) + ' order');
+  }, function(e){ toast('Connect nahi hua: ' + e.message); });
+}
+function saveSync(){
+  var url = document.getElementById('syUrl').value.trim();
+  var code = document.getElementById('syCode').value.trim();
+  var auto = document.getElementById('syAuto').checked;
+  var autoBill = document.getElementById('syBill').checked;
+  if (url && !/^https?:\/\//i.test(url)) return toast('URL http:// ya https:// se shuru hona chahiye');
+  if (code && !parseCode(code)) return toast('Pairing code galat format ka hai (DS1.xxxx.yyyy)');
+  var c = syncCfg();
+  c.url = url; c.code = code; c.auto = auto; c.autoBill = autoBill;
+  saveDB(); closeModal(); renderView();
+  toast(code ? 'Online sync save ho gaya' : 'Online sync band kar diya');
+  if (syncReady()) { flushQueue(); pullShopStatus(); }
+}
+function queueBillUpload(inv){
+  queueOrder({
+    ref: 'bill-' + inv.id,
+    items: inv.items.map(function(it){ return { n: it.name, q: it.qty, r: it.price, u: 'pcs' }; }),
+    note: 'Bill #' + inv.no
+  });
+}
+function queueOrder(payload){
+  if (!DB.pending) DB.pending = [];
+  DB.pending.push({ kind: 'order', payload: payload, at: new Date().toISOString() });
+  saveDB();
+  flushQueue();
+}
+function flushQueue(){
+  if (!syncReady()) return;
+  if (!DB.pending) DB.pending = [];
+  if (!DB.pending.length) { pullShopStatus(); return; }
+  if (DB.syncing) return;
+  DB.syncing = true;
+  var job = DB.pending[0];
+  var body = {
+    ref: job.payload.ref,
+    shopName: DB.settings.shopName,
+    shopPhone: DB.settings.phone,
+    shopAddress: DB.settings.address,
+    items: job.payload.items,
+    note: job.payload.note || ''
+  };
+  api('/api/order', { method: 'POST', body: JSON.stringify(body) }).then(function(j){
+    DB.pending.shift();
+    var c = syncCfg();
+    c.sent = (c.sent || []).concat([{ id: j.id, no: j.no, total: j.total, at: new Date().toISOString(), status: 'naya' }]).slice(-20);
+    DB.syncing = false;
+    saveDB();
+    toast('Online bhej diya' + (j.duplicate ? ' (pehle se tha)' : '') + ' • #' + j.no);
+    renderView();
+    flushQueue();
+  }, function(e){
+    DB.syncing = false;
+    toast('Online send nahi hua: ' + e.message);
+    renderView();
+  });
+}
+function pullShopStatus(){
+  if (!syncReady()) return;
+  var phone = String(DB.settings.phone || '').replace(/\D/g, '');
+  api('/api/shop?shop=' + encodeURIComponent(phone)).then(function(j){
+    var c = syncCfg();
+    (j.orders || []).forEach(function(so){
+      var e = (c.sent || []).find(function(x){ return x.id === so.id; });
+      if (e) e.status = so.status;
+      else c.sent = (c.sent || []).concat([{ id: so.id, no: so.no, total: so.total, at: so.createdAt, status: so.status }]);
+    });
+    c.sent = (c.sent || []).slice(-20);
+    saveDB();
+    if (tab === 'home') renderView();
+  }, function(){});
+}
+function onlineSend(){
+  if (!cart.length) return toast('Cart khali hai');
+  if (!syncReady()) return toast('Pehle settings mein online sync bharein');
+  var p = orderPayload();
+  queueOrder({ ref: p.ref, items: p.items, note: 'Shop app se order' });
+  closeModal();
+  toast('Online bhej raha hoon...');
+}
+function syncCardHTML(){
+  var c = syncCfg();
+  if (!syncReady()) {
+    return '<div class="card mt12"><div class="row between"><div><div class="b small">Online sync band hai</div>' +
+      '<div class="tiny muted">Settings (⚙) mein server URL aur pairing code daalein — bill khud distributor tak pahunchega.</div></div>' +
+      '<button class="btn ghost sm" data-act="settings">Set</button></div></div>';
+  }
+  var pend = (DB.pending || []).length;
+  var sent = (c.sent || []).slice(-3).reverse().map(function(s){
+    var pill = s.status === 'delivered' ? 'ok' : (s.status === 'dispatched' ? 'warn' : '');
+    return '<div class="item"><div class="grow"><div class="t small">Order #' + s.no + '</div>' +
+      '<div class="tiny muted">' + money(s.total || 0) + '</div></div><span class="pill ' + pill + '">' + (s.status || 'naya') + '</span></div>';
+  }).join('');
+  return '<div class="card mt12"><div class="row between">' +
+    '<div><div class="b small">☁ Online sync chalu</div><div class="tiny muted">' + (pend ? pend + ' bhejna baaki' : 'sab bhej diya') + '</div></div>' +
+    '<button class="btn ghost sm" data-act="syncNow">Sync</button></div>' +
+    (sent ? '<div class="mt8">' + sent + '</div>' : '') + '</div>';
+}
+
+/* ---------- distributor ko order bhejna ---------- */
+function orderPayload(){
+  var items = cart.map(function(c){
+    var p = prod(c.pid);
+    return p ? { n: p.name, q: c.qty, r: p.price, u: p.unit || 'pcs' } : null;
+  }).filter(Boolean);
+  return {
+    t: 'DSORD', v: 1,
+    ref: (DB.settings.phone || 'shop') + '-' + Date.now(),
+    date: new Date().toISOString(),
+    shop: { name: DB.settings.shopName, phone: DB.settings.phone, address: DB.settings.address },
+    items: items
+  };
+}
+function encodeOrder(o){
+  try { return 'DSORD1.' + btoa(unescape(encodeURIComponent(JSON.stringify(o)))); }
+  catch (e) { return ''; }
+}
+function shareOrderModal(){
+  if (!cart.length) return toast('Pehle cart mein product jodein');
+  var payload = orderPayload();
+  var code = encodeOrder(payload);
+  if (!code) return toast('Order code nahi ban paya');
+  var total = payload.items.reduce(function(a, it){ return a + it.r * it.q; }, 0);
+  var lines = payload.items.map(function(it){ return '<div class="row between small" style="padding:3px 0"><span>' + esc(it.n) + ' × ' + it.q + '</span><span class="muted">' + money(it.r * it.q) + '</span></div>'; }).join('');
+  showModal(
+    '<div class="sheet-head"><div><h3>Distributor ko order</h3><div class="small muted">' + payload.items.length + ' item • approx ' + money(total) + '</div></div>' +
+      '<button class="x" data-act="closeModal">✕</button></div>' +
+    '<div class="card" style="box-shadow:none;background:#fafcfb">' + lines +
+      '<div class="divider"></div><div class="row between b"><span>Total</span><span>' + money(total) + '</span></div></div>' +
+    '<div class="field"><label>Order code (distributor app mein paste karein)</label>' +
+      '<textarea class="inp" id="orderCode" rows="4" readonly style="font-size:11px">' + esc(code) + '</textarea></div>' +
+    (syncReady() ? '<button class="btn block mt12" data-act="onlineSend">☁ Online bhejein (automatic)</button>' : '') +
+    '<div class="row mt12" style="gap:8px">' +
+      '<button class="btn ghost grow" data-act="copyOrder">📋 Copy</button>' +
+      '<button class="btn grow" data-act="waOrder">💬 WhatsApp</button>' +
+    '</div>' +
+    '<div class="small muted mt12">Distributor apne app mein "Order import" khol kar ye code paste karega — order usi waqt unke paas ban jayega.</div>'
+  );
+}
+function copyOrder(){
+  var el = document.getElementById('orderCode');
+  if (!el) return;
+  var txt = el.value;
+  try {
+    el.removeAttribute('readonly');
+    el.select();
+    el.setSelectionRange(0, txt.length);
+    var ok = document.execCommand && document.execCommand('copy');
+    el.setAttribute('readonly', 'readonly');
+    if (ok) return toast('Order code copy ho gaya');
+  } catch (e) {}
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(function(){ toast('Order code copy ho gaya'); }, function(){ toast('Copy nahi hua — text select karke copy karein'); });
+  } else { toast('Text select karke copy karein'); }
+}
+function waOrder(){
+  if (!cart.length) return toast('Cart khali hai');
+  var payload = orderPayload();
+  var code = encodeOrder(payload);
+  var total = payload.items.reduce(function(a, it){ return a + it.r * it.q; }, 0);
+  var txt = '*Order — ' + DB.settings.shopName + '*\n';
+  if (DB.settings.phone) txt += 'Ph: ' + DB.settings.phone + '\n';
+  txt += '----------------\n';
+  payload.items.forEach(function(it){ txt += it.n + ' × ' + it.q + ' ' + (it.u || '') + ' = ' + money(it.r * it.q) + '\n'; });
+  txt += '----------------\n*Approx total: ' + money(total) + '*\n\nOrder code (app mein paste karein):\n' + code;
+  var dp = (DB.settings.distPhone || '').replace(/\D/g, '');
+  var url = dp ? 'https://wa.me/91' + dp.slice(-10) + '?text=' + encodeURIComponent(txt) : 'https://wa.me/?text=' + encodeURIComponent(txt);
+  openExternal(url);
+}
+
+/* Android hardware back button ke liye */
+/* auto sync: app khula hai to har 30 second */
+setInterval(function(){
+  if (session && syncReady() && syncCfg().auto) { flushQueue(); pullShopStatus(); }
+}, 30000);
+
+window.__back = function(){
+  var m = document.getElementById('modal');
+  if (m && !m.classList.contains('hidden')) { closeModal(); return true; }
+  if (tab !== 'home') { tab = 'home'; renderView(); syncNav(); return true; }
+  return false;
+};
+
+function openExternal(url){
+  if (window.AndroidBridge && window.AndroidBridge.openUrl) { try { window.AndroidBridge.openUrl(url); return; } catch (e) {} }
+  window.open(url, '_blank');
+}
+
+boot();
+</script>
+</body>
+</html>
